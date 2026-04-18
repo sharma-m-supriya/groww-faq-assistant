@@ -3,11 +3,10 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Page config
+# ---------------- PAGE CONFIG ---------------- #
 st.set_page_config(layout="wide")
 
 # ---------------- UI ---------------- #
-
 st.markdown("""
 <style>
 body {
@@ -34,7 +33,7 @@ body {
 .subtitle {
     font-size: 18px;
     color: #6B7280;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 /* Search bar */
@@ -52,6 +51,8 @@ body {
     margin-top: 30px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.06);
     max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Green highlight */
@@ -65,6 +66,7 @@ body {
     border-radius: 30px;
     border: 1px solid #00D09C;
     color: #00D09C;
+    margin: 5px;
 }
 
 .stButton > button:hover {
@@ -74,33 +76,51 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# Hero section
+# ---------------- HERO ---------------- #
 st.markdown('<div class="center">', unsafe_allow_html=True)
-st.markdown('<div class="title">Groww your wealth</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="title">Groww your knowledge 📈</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Ask factual mutual fund questions</div>', unsafe_allow_html=True)
 
-query = st.text_input("", placeholder="Search mutual fund facts...")
+# Info box
+st.info("""
+I can answer:
+• Mutual fund basics (NAV, SIP, SWP)  
+• Fund details (expense ratio, exit load)  
+• Rules (lock-in, taxation)  
+• Statements & downloads  
 
-# Example buttons
-st.write("")
-col1, col2, col3 = st.columns(3)
+❌ I do NOT give investment advice
+""")
 
-with col1:
-    if st.button("ELSS lock-in"):
-        query = "ELSS lock-in period"
+# Search input
+query = st.text_input(
+    "",
+    placeholder="Try: ELSS lock-in, NAV meaning, exit load SBI fund..."
+)
 
-with col2:
-    if st.button("Exit load"):
-        query = "Exit load SBI Bluechip Fund"
+# Suggested questions
+st.write("### 💡 Try asking:")
 
-with col3:
-    if st.button("Minimum SIP"):
-        query = "Minimum SIP SBI Flexicap Fund"
+examples = [
+    "What is ELSS lock-in period?",
+    "What is exit load in SBI Bluechip Fund?",
+    "Minimum SIP amount for mutual funds?",
+    "What is NAV in mutual funds?",
+    "How to download capital gains statement?",
+    "Who regulates mutual funds in India?"
+]
+
+cols = st.columns(2)
+
+for i, q in enumerate(examples):
+    with cols[i % 2]:
+        if st.button(q):
+            query = q
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- DATA ---------------- #
-
 df = pd.read_csv("data.csv", sep="|")
 
 # Load model
@@ -110,24 +130,22 @@ questions = df["question"].tolist()
 question_embeddings = model.encode(questions)
 
 # ---------------- SMART SEARCH ---------------- #
-
 def get_best_answer(user_query):
     query_embedding = model.encode([user_query])
     scores = cosine_similarity(query_embedding, question_embeddings)[0]
-    
+
     best_index = scores.argmax()
     best_score = scores[best_index]
-    
+
     if best_score < 0.4:
         return None
-    
+
     return df.iloc[best_index]
 
 # ---------------- RESPONSE ---------------- #
-
 if query:
 
-    # ❌ Reject advice questions
+    # Reject advice queries
     if any(word in query.lower() for word in ["buy", "invest", "best", "should"]):
         st.warning("⚠️ I only provide factual information. No investment advice.")
         st.stop()
@@ -149,4 +167,7 @@ if query:
         """, unsafe_allow_html=True)
 
     else:
-        st.warning("⚠️ Sorry, I couldn't find a factual answer.")
+        st.warning("⚠️ Couldn't find exact answer. Try asking like:")
+        st.write("- What is NAV?")
+        st.write("- What is ELSS lock-in?")
+        st.write("- Minimum SIP amount?")

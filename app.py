@@ -1,72 +1,116 @@
 import streamlit as st
 import pandas as pd
 
-# Page setup
-st.set_page_config(page_title="Groww FAQ Assistant", layout="centered")
+# Page config
+st.set_page_config(layout="wide")
 
-# Groww-style CSS
+# 🔥 Groww-style CSS (major upgrade)
 st.markdown("""
 <style>
+
 body {
     background-color: #F7F9FB;
 }
-.title {
-    text-align: center;
-    font-size: 52px;
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+.logo {
+    font-size: 22px;
     font-weight: 700;
     color: #2E2E2E;
 }
-.subtitle {
-    text-align: center;
+
+.menu {
     color: #6b7280;
-    font-size: 18px;
+    font-size: 14px;
 }
-.green-btn {
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    margin-top: 60px;
+}
+
+.hero-title {
+    font-size: 72px;
+    font-weight: 800;
+    color: #2E2E2E;
+}
+
+.hero-btn {
     background-color: #00D09C;
     color: white;
-    border-radius: 25px;
-    padding: 10px 25px;
-    text-align: center;
-    display: inline-block;
+    padding: 14px 32px;
+    border-radius: 30px;
     font-weight: 600;
-}
-.answer-box {
-    background-color: white;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.06);
+    display: inline-block;
     margin-top: 20px;
 }
-.header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: 600;
-    margin-bottom: 20px;
+
+/* Input */
+.stTextInput > div > div > input {
+    border-radius: 30px;
+    padding: 12px;
 }
+
+/* Answer Card */
+.answer-box {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.05);
+    margin-top: 30px;
+}
+
+/* Buttons */
+.stButton>button {
+    border-radius: 20px;
+    border: 1px solid #00D09C;
+    color: #00D09C;
+}
+
+.stButton>button:hover {
+    background-color: #00D09C;
+    color: white;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# Navbar
-col1, col2 = st.columns([3,1])
-with col1:
-    st.markdown("### Groww FAQ Assistant")
-with col2:
-    st.markdown("<p style='text-align:right;color:#00D09C;'>Facts only</p>", unsafe_allow_html=True)
+# 🧭 Navbar
+st.markdown("""
+<div class="navbar">
+    <div class="logo">Groww</div>
+    <div class="menu">Facts only • No advice</div>
+</div>
+""", unsafe_allow_html=True)
 
-# Hero Section
-st.markdown('<p class="title">Groww your knowledge 📈</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Ask factual mutual fund questions</p>', unsafe_allow_html=True)
+# 🎯 Hero Section
+st.markdown("""
+<div class="hero">
+    <div class="hero-title">Groww your wealth</div>
+    <div class="hero-btn">Get started</div>
+</div>
+""", unsafe_allow_html=True)
 
 st.write("")
+st.write("")
 
-# Load CSV
+# 📂 Load data
 df = pd.read_csv("data.csv", sep="|")
 
-# Input
-query = st.text_input("🔍 Ask your question")
+# 🔍 Search
+query = st.text_input("Search mutual fund facts...")
 
-# Example buttons
-st.write("### Try these:")
+# 💡 Example buttons
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -81,7 +125,7 @@ with col3:
     if st.button("Minimum SIP"):
         query = "Minimum SIP SBI Flexicap Fund"
 
-# Answer logic
+# 🤖 Answer logic
 if query:
     result = df[df["question"].str.lower().str.contains(query.lower())]
 
@@ -93,7 +137,7 @@ if query:
         <div class="answer-box">
         <b style="color:#00D09C;">Answer</b><br><br>
         {answer}<br><br>
-        🔗 <span style="color:#00D09C;">Source:</span> {source}
+        🔗 <b>Source:</b> {source}
         </div>
         """, unsafe_allow_html=True)
 

@@ -7,7 +7,7 @@ st.title("📊 Groww FAQ Assistant")
 st.write("Ask me factual questions about SBI Mutual Funds.")
 
 # Load dataset
-df = pd.read_csv("data.csv")
+df = pd.read_csv("data.csv", sep="|")
 
 # Example questions
 st.markdown("### Example Questions:")

@@ -1,23 +1,24 @@
 import streamlit as st
 import pandas as pd
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
+# Page config
 st.set_page_config(layout="wide")
 
-# 🔥 CLEAN MODERN CSS
+# ---------------- UI ---------------- #
+
 st.markdown("""
 <style>
-
-/* Remove ugly padding */
-.block-container {
-    padding-top: 2rem;
-}
-
-/* Background */
 body {
     background-color: #F7F9FB;
 }
 
-/* Center everything */
+.block-container {
+    padding-top: 2rem;
+}
+
+/* Center content */
 .center {
     text-align: center;
 }
@@ -41,16 +42,16 @@ body {
     border-radius: 40px;
     padding: 18px;
     font-size: 16px;
-    border: 1px solid #ddd;
 }
 
-/* Answer bubble */
+/* Answer box */
 .answer {
-    background: white;
+    background: #FFFFFF;
     padding: 25px;
     border-radius: 20px;
     margin-top: 30px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    max-width: 800px;
 }
 
 /* Green highlight */
@@ -64,27 +65,23 @@ body {
     border-radius: 30px;
     border: 1px solid #00D09C;
     color: #00D09C;
-    padding: 10px 20px;
 }
 
 .stButton > button:hover {
     background: #00D09C;
     color: white;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# 🧠 HERO SECTION
+# Hero section
 st.markdown('<div class="center">', unsafe_allow_html=True)
-
 st.markdown('<div class="title">Groww your wealth</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Ask factual mutual fund questions</div>', unsafe_allow_html=True)
 
-# 🔍 SEARCH BAR
 query = st.text_input("", placeholder="Search mutual fund facts...")
 
-# 💡 QUICK QUESTIONS
+# Example buttons
 st.write("")
 col1, col2, col3 = st.columns(3)
 
@@ -102,24 +99,54 @@ with col3:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 📂 DATA
+# ---------------- DATA ---------------- #
+
 df = pd.read_csv("data.csv", sep="|")
 
-# 🤖 RESPONSE
-if query:
-    result = df[df["question"].str.lower().str.contains(query.lower())]
+# Load model
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    if not result.empty:
-        answer = result.iloc[0]["answer"]
-        source = result.iloc[0]["source"]
+questions = df["question"].tolist()
+question_embeddings = model.encode(questions)
+
+# ---------------- SMART SEARCH ---------------- #
+
+def get_best_answer(user_query):
+    query_embedding = model.encode([user_query])
+    scores = cosine_similarity(query_embedding, question_embeddings)[0]
+    
+    best_index = scores.argmax()
+    best_score = scores[best_index]
+    
+    if best_score < 0.4:
+        return None
+    
+    return df.iloc[best_index]
+
+# ---------------- RESPONSE ---------------- #
+
+if query:
+
+    # ❌ Reject advice questions
+    if any(word in query.lower() for word in ["buy", "invest", "best", "should"]):
+        st.warning("⚠️ I only provide factual information. No investment advice.")
+        st.stop()
+
+    st.write(f"💬 You asked: *{query}*")
+
+    result = get_best_answer(query)
+
+    if result is not None:
+        answer = result["answer"]
+        source = result["source"]
 
         st.markdown(f"""
         <div class="answer">
             <div class="green">Answer</div><br>
             {answer}<br><br>
-            🔗 <span class="green">Source:</span> {source}
+            🔗 <a href="{source}" target="_blank">View Source</a>
         </div>
         """, unsafe_allow_html=True)
 
     else:
-        st.warning("⚠️ Facts only. No investment advice.")
+        st.warning("⚠️ Sorry, I couldn't find a factual answer.")
